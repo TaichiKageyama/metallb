@@ -22,6 +22,7 @@ import (
 	"go.universe.tf/metallb/internal/k8s"
 
 	gokitlog "github.com/go-kit/kit/log"
+	"github.com/hashicorp/logutils"
 	"github.com/hashicorp/memberlist"
 )
 
@@ -43,7 +44,7 @@ type SpeakerList struct {
 }
 
 // New creates a new SpeakerList and returns a pointer to it.
-func New(logger gokitlog.Logger, nodeName, bindAddr, bindPort, secret, namespace, labels string, stopCh chan struct{}) (*SpeakerList, error) {
+func New(logger gokitlog.Logger, loglevel *string, nodeName, bindAddr, bindPort, secret, namespace, labels string, stopCh chan struct{}) (*SpeakerList, error) {
 	sl := SpeakerList{
 		l:         logger,
 		stopCh:    stopCh,
@@ -73,6 +74,14 @@ func New(logger gokitlog.Logger, nodeName, bindAddr, bindPort, secret, namespace
 	}
 	loggerout := gokitlog.NewStdlibAdapter(gokitlog.With(sl.l, "component", "Memberlist"))
 	mconfig.Logger = golog.New(loggerout, "", golog.Lshortfile)
+	// Set log level of memberlist
+	filter := &logutils.LevelFilter{
+		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR"},
+		MinLevel: logutils.LogLevel(*loglevel),
+		Writer:   loggerout,
+	}
+	mconfig.Logger.SetOutput(filter)
+
 	if secret == "" {
 		logger.Log("op", "startup", "warning", "no ml-secret-key set, memberlist traffic will not be encrypted")
 	} else {

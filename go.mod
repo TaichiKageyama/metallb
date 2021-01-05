@@ -12,6 +12,7 @@ require (
 	github.com/golang/protobuf v1.3.1
 	github.com/google/go-cmp v0.3.0
 	github.com/googleapis/gnostic v0.2.0 // indirect
+	github.com/hashicorp/logutils v1.0.0
 	github.com/hashicorp/memberlist v0.1.7
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/kr/pretty v0.1.0 // indirect

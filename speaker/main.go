@@ -76,6 +76,7 @@ func main() {
 		mlSecret    = flag.String("ml-secret-key", os.Getenv("METALLB_ML_SECRET_KEY"), "Secret key for MemberList (fast dead node detection)")
 		myNode      = flag.String("node-name", os.Getenv("METALLB_NODE_NAME"), "name of this Kubernetes node (spec.nodeName)")
 		port        = flag.Int("port", 80, "HTTP listening port")
+		loglevel    = flag.String("loglevel", "ERROR", "loglevel of speakerlist")
 	)
 	flag.Parse()
 
@@ -84,6 +85,17 @@ func main() {
 	if *myNode == "" {
 		logger.Log("op", "startup", "error", "must specify --node-name or METALLB_NODE_NAME", "msg", "missing configuration")
 		os.Exit(1)
+	}
+	if *loglevel != "" {
+		switch *loglevel {
+		case "ERROR":
+		case "WARN":
+		case "INFO":
+		case "DEBUG":
+		default:
+			logger.Log("op", "startup", "error", "-loglevel should be INFO, WARN, ERROR or DEBUG", "msg", "missing configuration")
+			os.Exit(1)
+		}
 	}
 
 	stopCh := make(chan struct{})
@@ -97,7 +109,7 @@ func main() {
 	}()
 	defer logger.Log("op", "shutdown", "msg", "done")
 
-	sList, err := speakerlist.New(logger, *myNode, *mlBindAddr, *mlBindPort, *mlSecret, *mlNamespace, *mlLabels, stopCh)
+	sList, err := speakerlist.New(logger, loglevel, *myNode, *mlBindAddr, *mlBindPort, *mlSecret, *mlNamespace, *mlLabels, stopCh)
 	if err != nil {
 		os.Exit(1)
 	}
